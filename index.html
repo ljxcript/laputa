@@ -1,0 +1,853 @@
+<html>
+<head>
+	<title>Happy birthday to U</title>
+	<style type="text/css">
+		#divisions {
+			position: absolute;
+			z-index: 100;
+			background-color: white;
+			left: 0px;
+			top: 0px;
+			width: 100%;
+			height: 100%;
+			opacity:0.3;
+		}
+		.subDivisions {
+			width: 10%;
+			height: 20%;
+			display: inline-block;
+			background-color:lightgreen;
+
+		}
+		.subDivisions:hover{
+			background-color: transparent;
+
+		}
+		#controller {
+			z-index: 150;
+			width: 300px;
+			height: 300px;
+			background-color: lightblue;
+			position:absolute;
+			left: 0px;
+			top:0px;
+		}
+		body{
+			margin: 0px;
+
+		}
+		ul {
+			padding-left: 0px;	
+		}
+		ul li{
+			list-style-type: none;
+			font-size: 20px;
+			font-family: sans-serif;
+			font-weight: bolder;
+			color:white;
+			transition:all 0.2s;
+			background-color: lightgreen;
+			width: 100%;
+			margin-top: 10px;
+			cursor: pointer;
+			padding-left: 20px;
+		}
+	</style>
+
+	<script type="text/javascript" src="lib_jquery.min.js"></script>
+	<script type="text/javascript" src = "lib_three.min.js"></script>
+	<script type="text/javascript" src = "lib_OrbitControl.js"></script>
+	<script type="x-shader/x-vertex" id="vertexShader">
+		varying vec3 vWorldPosition;
+		void main() {
+		vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
+		vWorldPosition = worldPosition.xyz;
+		gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+		}
+	</script>
+	<script type="x-shader/x-fragment" id="fragmentShader">
+		uniform vec3 topColor;
+		uniform vec3 bottomColor;
+		uniform float offset;
+		uniform float exponent;
+		varying vec3 vWorldPosition;
+		void main() {
+		float h = normalize( vWorldPosition + offset ).y;
+		gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h , 0.0), exponent ), 0.0 ) ), 1.0 );
+		}
+	</script>
+	<script type="text/javascript">
+	 $(function() {
+		var ani = {};
+		ani.group = [];
+
+	 	//场景
+		var scene = new THREE.Scene();
+		// scene.fog = new THREE.Fog(0xffffff, 1,2000);
+		//摄像机
+		var camera = new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.1,700);
+		camera.position.set(-104,100,395);
+		camera.lookAt(new THREE.Vector3(10,-2,101));
+
+		//渲染器
+		var renderer = new THREE.WebGLRenderer();
+		renderer.setClearColor(0xf7f29e);
+		renderer.setSize(window.innerWidth,window.innerHeight);
+		renderer.shadowMapEnabled = true;
+		// 辅助坐标轴
+		var axes = new THREE.AxisHelper(220);
+		// scene.add(axes);
+
+		//控制器
+		var orbitControls = new THREE.OrbitControls(camera);
+		orbitControls.autoRotate = true;
+		var clock = new THREE.Clock();
+
+
+
+		//天空
+		var vertexShader = document.getElementById( 'vertexShader' ).textContent;
+		var fragmentShader = document.getElementById( 'fragmentShader' ).textContent;
+		var uniforms = {
+			topColor: 	 { type: "c", value: new THREE.Color( 0x003366 ) },
+			bottomColor: { type: "c", value: new THREE.Color( 0x000000 ) },
+			offset:		 { type: "f", value: 500 },
+			exponent:	 { type: "f", value: 0.6 }
+		};
+		var skyGeo = new THREE.SphereGeometry( 300, 32, 15 );
+		var skyMat = new THREE.ShaderMaterial( { vertexShader: vertexShader, fragmentShader: fragmentShader, uniforms: uniforms, side: THREE.BackSide } );
+		var sky = new THREE.Mesh( skyGeo, skyMat );
+		scene.add( sky );
+
+
+
+
+		var cupG = new THREE.JSONLoader(true);
+		cupG.load('meshes/tohm_snowman.js',function(geometry,material){
+
+			var whiteMaterial = new THREE.MeshPhongMaterial( {
+				color: 0xffffdd,
+				shading: THREE.FlatShading
+			} );
+			var blueMaterial = new THREE.MeshPhongMaterial( {
+				color: 0x336699,
+				shading: THREE.FlatShading
+			} );
+			var redMaterial = new THREE.MeshPhongMaterial( {
+				color: 0xe70a00,
+				shading: THREE.FlatShading
+			} );
+			var orangeMaterial = new THREE.MeshPhongMaterial( {
+				color: 0xff6600,
+				shading: THREE.FlatShading
+			} );
+			var blackMaterial = new THREE.MeshPhongMaterial( {
+				color: 0x000000,
+				shading: THREE.FlatShading
+			} );
+			var greyMaterial = new THREE.MeshPhongMaterial({
+				color:0x333333,
+				shading: THREE.FlatShading
+			});
+
+			material[4] = redMaterial;
+			material[3] = orangeMaterial;
+			material[0] = blueMaterial;
+			material[1] = blackMaterial;
+			material[2] = blackMaterial;
+			material[5] = whiteMaterial;
+			material[6] = whiteMaterial;
+			myMaterial = [material[0],material[1],material[2],material[3],greyMaterial,material[5],material[6]];
+			meM = new THREE.MultiMaterial(myMaterial);
+			var me = new THREE.Mesh(geometry,meM);
+			var meimeiMaterial = new THREE.MultiMaterial(material);
+			var meimei = new THREE.Mesh(geometry,meimeiMaterial);
+			me.position.set(-3,0.8,3);
+			me.castShadow = true;
+			me.scale.set(2.1,2.1,2.1);
+			scene.add(me);
+			meimei.position.set(0,0.8,5);
+			meimei.name = "hm";
+			meimei.castShadow = true;
+			meimei.rotation.y = 0;
+			meimei.scale.set(1.7,1.6,1.7);
+			scene.add(meimei);
+		});
+
+
+
+		cupG.load('meshes/tohm_dengta.js',function(geometry,material){
+
+			var whiteMaterial = new THREE.MeshPhongMaterial( {
+				color: 0xffffdd,
+				shading: THREE.FlatShading
+			} );
+			var blueMaterial = new THREE.MeshPhongMaterial( {
+				color: 0x336699,
+				shading: THREE.FlatShading
+			} );
+			var redMaterial = new THREE.MeshPhongMaterial( {
+				color: 0xe70a00,
+				shading: THREE.FlatShading
+			} );
+			var orangeMaterial = new THREE.MeshPhongMaterial( {
+				color: 0xCCFF99,
+				shading: THREE.FlatShading
+			} );
+			var blackMaterial = new THREE.MeshPhongMaterial( {
+				color: 0x003366,
+				shading: THREE.FlatShading
+			} );
+			var greyMaterial = new THREE.MeshPhongMaterial({
+				color:0x333333,
+				shading: THREE.FlatShading
+			});
+
+			material[4] = redMaterial;
+			material[3] = orangeMaterial;
+			material[0] = blueMaterial;
+			material[1] = blackMaterial;
+			material[2] = blackMaterial;
+			material[5] = whiteMaterial;
+			material[6] = whiteMaterial;
+			var dengtaMaterial = new THREE.MultiMaterial(material);
+			var dengta = new THREE.Mesh(geometry,dengtaMaterial);
+
+			dengta.position.set(150,157,45);
+			dengta.name = "dengta";
+			dengta.castShadow = true;
+			dengta.rotation.y = 180;
+			dengta.scale.set(1.7,1.6,1.7);
+			scene.add(dengta);
+		});
+
+
+		var globalLight = new THREE.AmbientLight( 0x404040 ); // soft white globalLight to global objects
+		scene.add( globalLight );
+
+		//island
+		cupG.load('meshes/tohm_islandFinal.js',function(geometry,material){
+			var snowMaterial = new THREE.MeshPhongMaterial( {
+				color:  0xffffdd,  
+				shading: THREE.FlatShading
+			} );
+	
+			var earthMaterial = new THREE.MeshPhongMaterial( {
+				color: 0xFFCC33,   
+				shading: THREE.FlatShading
+			} );
+
+			var meadowMaterial = new THREE.MeshPhongMaterial( {
+				color: 0x006633,
+				shading: THREE.FlatShading
+			} );
+
+			material[1] = snowMaterial;
+			material[0] = earthMaterial;
+			material[2] = meadowMaterial;
+
+
+			var islandMaterial = new THREE.MultiMaterial(material);
+			var island = new THREE.Mesh(geometry,islandMaterial);
+			island.name = "island";
+			island.receiveShadow = true;
+			island.rotation.y = -81;
+			island.scale.set(8.0,8.0,8.0);
+			island.position.y =-14;
+			island.position.z = 2;
+			island.position.x = -10;
+			scene.add(island);
+		});
+
+
+		//house
+		cupG.load('meshes/tohm_housefinal.js',function(geometry,material){
+			var roofMaterial = new THREE.MeshPhongMaterial( {
+				color: 0xfedcbd, 
+				shading: THREE.FlatShading
+			} );
+	
+			var wallMaterial = new THREE.MeshPhongMaterial( {
+				color: 0xffffdd,  
+				shading: THREE.FlatShading
+			} );
+			var windowMaterial = new THREE.MeshPhongMaterial( {
+				color: 0xffffdd,
+				opacity:0,								
+				shading: THREE.FlatShading,
+				transparent:true
+			} );
+			var woodMaterial = new THREE.MeshPhongMaterial( {
+				color: 0x013763,
+				shading: THREE.FlatShading
+			} );
+
+			material[1] = roofMaterial;
+			material[0] = wallMaterial;
+			material[2] = woodMaterial;
+			material[3] = windowMaterial;
+
+			var houseMaterial = new THREE.MultiMaterial(material);
+			var house = new THREE.Mesh(geometry,houseMaterial);
+			house.position.set(9,4,-24);
+			house.name = "house";
+			house.castShadow = true;
+			house.receiveShadow = true;
+			house.scale.set(3.2,4.0,3.2);
+			house.rotation.y = -20;
+			scene.add(house);
+		});
+
+
+		//the tree with snow covered
+		cupG.load('meshes/tohm_tree2.js',function(geometry,material){
+
+			var greenMaterial = new THREE.MeshPhongMaterial( {
+				color: 0x006633,
+				shading: THREE.FlatShading
+			} );
+			var whiteMaterial = new THREE.MeshPhongMaterial( {
+				color: 0xffffdd,
+				shading: THREE.FlatShading
+			} );
+		
+			var brownMaterial = new THREE.MeshPhongMaterial( {
+				color: 0x0F0401,   
+				shading: THREE.FlatShading
+			} );
+
+			material[1] = whiteMaterial;
+			material[0] = greenMaterial;
+			material[2] = brownMaterial;
+
+			var treeMaterial = new THREE.MultiMaterial(material);
+			var snowTree = new THREE.Mesh(geometry,treeMaterial);
+			var tree2 = snowTree.clone();
+			var tree3 = snowTree.clone();
+			var x = [-85,-96,-72,-110];
+			var y = [9,7,8,24];
+			var z = [10,7,-4,-11];
+			var scaleY = [3.8,3.0,3.3,3.8];
+			for (var j = 0; j < 4; j++) {
+				var k = snowTree.clone();
+				k.position.set(x[j],y[j],z[j]);
+				k.scale.set(2.5,scaleY[j],2.5);
+				scene.add(k);
+				
+			}
+			tree3.position.set(54,10,0);
+			tree3.scale.set(2.0,3.7,2.0);
+			scene.add(tree3);
+			tree2.position.set(70,9,16);
+			tree2.scale.set(2.0,3.1,2.0);
+			scene.add(tree2);
+			snowTree.name = "snowTree";
+			snowTree.castShadow = true;
+			snowTree.rotation.y = -90;
+			snowTree.scale.set(2.0,3.4,2.0);
+			snowTree.position.set(60,9,1);
+			scene.add(snowTree);
+		});
+
+
+		//the green tree
+		cupG.load('meshes/tohm_tree22.js',function(geometry,material){
+			var greenMaterial = new THREE.MeshPhongMaterial( {
+				color: 0x009966,  
+				shading: THREE.FlatShading
+			} );
+			var brownMaterial = new THREE.MeshPhongMaterial( {
+				color: 0x0F0401,   
+				shading: THREE.FlatShading
+			} );
+			material[1] = greenMaterial;
+			material[0] = brownMaterial;
+			var greenTreeMaterial = new THREE.MultiMaterial(material);
+			var greenTree = new THREE.Mesh(geometry,greenTreeMaterial);
+			var tree2 = greenTree.clone();
+			var tree3 = greenTree.clone();
+			var x = [-30,-25,-20,-29,-14,-22];
+			var y = [25,27,26,27,29,30];
+			var z = [-100,-90,-101,-92,-87,-88];
+			var scaleY = [7.1,7.2,7.7,8.0,6.7,8.3];
+			for (var j = 0; j < 6; j++) {
+				var k = greenTree.clone();
+				k.position.set(x[j],y[j],z[j]);
+				k.scale.set(3.0,scaleY[j],3.0);
+				scene.add(k);
+				
+			}
+			tree3.position.set(27,3,20);
+			tree3.scale.set(2.0,7.0,3.0);
+			scene.add(tree3);
+			tree2.position.set(35,3,15);
+			tree2.scale.set(3.0,6.0,3.0);
+			scene.add(tree2);
+			greenTree.name = "greenTree";
+			greenTree.castShadow = true;
+			greenTree.rotation.y = -90;
+			greenTree.scale.set(3.0,6.0,3.0);
+			greenTree.position.set(30,3,10);
+			scene.add(greenTree);
+		});
+
+		//ship
+		cupG.load('meshes/tohm_ship.js',function(geometry,material){
+			var whiteMaterial = new THREE.MeshPhongMaterial( {
+				color: 0xffffdd,  
+				shading: THREE.FlatShading,
+				transparent:true,
+				opacity:0.8
+			} );
+			var brownMaterial = new THREE.MeshPhongMaterial( {
+				color: 0xffffdd,  
+				shading: THREE.FlatShading,
+			} );
+			material[1] = whiteMaterial;
+			material[0] = brownMaterial;
+			var shipMaterial = new THREE.MultiMaterial(material);
+			var ship = new THREE.Mesh(geometry,shipMaterial);
+			ship.name = "ship";
+			ship.castShadow = true;
+			// ship.rotation.y = Math.PI/2;
+			ship.scale.set(1.5,4.0,1.5);
+			ship.position.set(-55,-6,45);
+			scene.add(ship);
+		});
+
+
+
+	var loader = new THREE.JSONLoader();
+	//ocean
+	loader.load( "meshes/tohm_ocean5.js", function( geometry,material ) {
+
+		var material1 = new THREE.MeshPhongMaterial( { color: 0x3388ff, specular: 0xffffff, shininess: 5, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading, transparent:true, opacity:0.6} );
+		var material2 = new THREE.MeshPhongMaterial( { color: 0x3388ff, specular: 0xffffff, shininess: 5, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading, transparent:true, opacity:0.3} );
+		material[0] = material1;
+		material[1] = material2;
+		var oceanMaterial = new THREE.MultiMaterial(material);		
+		var ocean = new THREE.Mesh( geometry, oceanMaterial );
+
+		var s = 5.6;
+		ocean.scale.set( s, s, s );
+		ocean.position.set(-7, -8, 4);
+		ocean.receiveShadow = true;
+
+		scene.add( ocean );
+
+		var mixer = new THREE.AnimationMixer( ocean );
+		var ac = mixer.clipAction(geometry.animations[ 0 ]);
+	 	ac.setEffectiveWeight(1);
+		ac.setLoop(THREE.LoopRepeat,10000);
+	 	ac.play();
+		ani.group.push( mixer);
+
+	} );
+
+
+	//seagull
+	loader.load( "meshes/tohm_seagullFinal.js", function( geometry,material ) {
+
+		var whiteMaterial = new THREE.MeshPhongMaterial( { color: 0xffffdd, specular: 0xffffff,morphTargets: true,
+			 shading: THREE.FlatShading
+		} );
+	
+		var mouthMaterial = new THREE.MeshPhongMaterial( { color: 0xe7bf2b, specular: 0xffffff,morphTargets: true,
+			 shading: THREE.FlatShading
+		} );
+
+		var feathermaterial = new THREE.MeshPhongMaterial( { color: 0x666666, specular: 0xffffff,morphTargets: true,
+			 shading: THREE.FlatShading, transparent:true, opacity:0.8
+		} );
+	
+		material[0] = whiteMaterial;
+		material[1] = mouthMaterial;
+		material[2] = feathermaterial;
+		var seagullMaterial = new THREE.MultiMaterial(material);
+
+		var mesh = new THREE.Mesh( geometry, seagullMaterial);
+		var mesh2 = mesh.clone();
+		mesh2.scale.set(1.3,1.3,1.3);
+		mesh2.position.set(-40,148,4);
+		scene.add(mesh2);
+		mesh.name = "seagull";
+		var s = 1.6;
+
+		mesh.scale.set( s, s, s );
+		mesh.position.set(80, 168, 4);
+		ani.seagull = mesh;
+		ani.seagull2 = mesh2;
+		scene.add( mesh );
+
+		var mixer = new THREE.AnimationMixer( mesh );
+		var mixer2 = new THREE.AnimationMixer(mesh2);
+		var ac2 = mixer2.clipAction(mesh2.geometry.animations[0]);
+	 	ac2.setEffectiveWeight(1);
+		ac2.setLoop(THREE.LoopRepeat,1000);
+		ac2.play();
+		ani.group.push(mixer2);
+		var ac = mixer.clipAction(geometry.animations[ 0 ]);
+	 	ac.setEffectiveWeight(1);
+		ac.setLoop(THREE.LoopRepeat,1000);
+	 	ac.play();
+		ani.group.push(mixer);
+
+	} );
+
+	var littleFish = [];
+		//whale
+	loader.load( "meshes/tohm_whale.js", function( geometry,material ) {
+
+		var material1 = new THREE.MeshPhongMaterial( { color: 0x000066, specular: 0xffffff, shininess: 5, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading, transparent:true, opacity:0.9
+		} );
+	
+		var mesh = new THREE.Mesh(geometry,material1);
+		
+
+		var s = 4.6;
+		mesh.name = "blueWhale";
+		mesh.scale.set( s, s, s );
+		mesh.position.set(-80, -16, 84);
+		mesh.rotation.y = Math.PI/2;
+		scene.add( mesh );
+		ani.blueWhale = mesh;
+		var mixer = new THREE.AnimationMixer( mesh );
+		var ac = mixer.clipAction(geometry.animations[ 0 ]);
+	 	ac.setEffectiveWeight(1);
+		ac.setLoop(THREE.LoopRepeat,1000);
+	 	ac.play();
+		ani.group.push(mixer);
+
+	} );
+
+	loader.load( "meshes/tohm_fishy.js", function( geometry,material ) {
+
+		var material1 = new THREE.MeshPhongMaterial( { color: 0x009966, specular: 0xffffff, shininess: 5, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading
+		} );
+	
+		var mesh = new THREE.Mesh(geometry,material1);
+		
+		var mesh2 = new THREE.Mesh(geometry,material1);
+
+		for (var i = 0; i< 7; i++){
+			var tempFish = new THREE.Mesh(geometry,material1);
+			tempFish.position.set(80+5*i,-60+5*i,64+(-5)*i);
+			tempFish.scale.set(1.1,1.1,1.1);
+			scene.add(tempFish);
+			littleFish.push(tempFish);
+			var fishMotion = new THREE.AnimationMixer(tempFish);
+			var act = fishMotion.clipAction(tempFish.geometry.animations[0]);
+			act.setLoop(THREE.LoopRepeat,1000);
+			act.play();
+			ani.group.push(fishMotion);
+		}
+
+		var s = 2.6;
+		mesh.scale.set( s, s, s );
+		mesh.position.set(80, -68, 4);
+		mesh2.scale.set(s,s,s);
+		mesh2.position.set(88,-55,4);
+		scene.add( mesh );
+		scene.add(mesh2);
+
+		var mixer2 = new THREE.AnimationMixer(mesh2);
+		var ac2 = mixer2.clipAction(geometry.animations[0]);
+		ac2.setEffectiveWeight(1);
+		ac2.setLoop(THREE.LoopRepeat,1000);
+		ac2.play();
+		ani.group.push(mixer2);
+
+		var mixer = new THREE.AnimationMixer( mesh );
+		var ac = mixer.clipAction(geometry.animations[ 0 ]);
+	 	ac.setEffectiveWeight(1);
+		ac.setLoop(THREE.LoopRepeat,1000);
+	 	ac.play();
+		ani.group.push(mixer);
+
+	} );
+
+	loader.load( "meshes/tohm_fishLast.js", function( geometry,material ) {
+
+		var material1 = new THREE.MeshPhongMaterial( { color: 0xffffdd, specular: 0xffffff, shininess: 5, morphTargets: true, vertexColors: THREE.FaceColors, shading: THREE.FlatShading, transparent:true, opacity:0.9
+		} );
+	
+	
+		var mesh = new THREE.Mesh( geometry, material1 );
+		var mesh2 = new THREE.Mesh(geometry,material1);
+		mesh2.name = "fish2";
+		mesh.name = "fish1";
+		var s = 3.6;
+		mesh.scale.set( s, s, s );
+		mesh.position.set(80, -68, 4);
+		mesh2.scale.set(s,s,s);
+		mesh2.position.set(88,-55,4);
+		scene.add( mesh );
+		scene.add(mesh2);
+		ani.fish1 = mesh;
+		ani.fish2 = mesh2;
+		var mixer2 = new THREE.AnimationMixer(mesh2);
+		var ac2 = mixer2.clipAction(geometry.animations[0]);
+		ac2.setEffectiveWeight(1);
+		ac2.setLoop(THREE.LoopRepeat,1000);
+		ac2.play();
+		ani.group.push(mixer2);
+
+		var mixer = new THREE.AnimationMixer( mesh );
+		var ac = mixer.clipAction(geometry.animations[ 0 ]);
+	 	ac.setEffectiveWeight(1);
+		ac.setLoop(THREE.LoopRepeat,1000);
+	 	ac.play();
+		ani.group.push(mixer);
+
+	} );
+	
+
+	$(container).append(renderer.domElement);
+
+	stars = new THREE.Group();
+	scene.add(stars);
+	var material = new THREE.SpriteMaterial( { color: 0xffffff, fog: true } );
+	for (var i = 0 ; i < 1500 ; i++) {
+        var sprite = new THREE.Sprite( material );
+        sprite.position.set(Math.random()*600-300, Math.random()*600, Math.random()*600-300);
+        var s = Math.random();
+        sprite.scale.set(s, s, s);
+        stars.add( sprite );
+	}
+
+	var light = new THREE.PointLight( 0xFFCC99, 0.8, 150 );
+	light.position.set( 20,30,-10);
+	scene.add( light );
+
+
+		var dirLight = new THREE.DirectionalLight( 0xffffff, 1 );
+		dirLight.position.set( -1, 1.75, -10.3 );
+		dirLight.position.multiplyScalar( 50 );
+		scene.add( dirLight );
+
+		/* Shadow of DirectionalLight */
+		dirLight.castShadow = false;
+
+		dirLight.shadowMapWidth = 2048;
+		dirLight.shadowMapHeight = 2048;
+		dirLight.shadowDarkness = 0.5;
+		dirLight.shadowBias = -0.001;
+
+	loader.load( "meshes/tohm_table.js", function( geometry,material ) {
+		var whiteMaterial = new THREE.MeshPhongMaterial( { color: 0xffff99, 
+			 shading: THREE.FlatShading
+		} );
+	
+		material[0] = whiteMaterial;
+
+		var seagullMaterial = new THREE.MultiMaterial(material);
+		var mesh = new THREE.Mesh( geometry, seagullMaterial);
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;
+		mesh.name = "table";
+		var s = 4.9;
+		mesh.scale.set( 6, s, s );
+		mesh.position.set(16, 9, -15);
+		scene.add( mesh );
+
+	} );
+	loader.load( "meshes/tohm_vase.js", function( geometry,material ) {
+		var whiteMaterial = new THREE.MeshPhongMaterial( { color: 0x6699CC, 
+			 shading: THREE.FlatShading
+		} );
+	
+		material[0] = whiteMaterial;
+
+		var seagullMaterial = new THREE.MultiMaterial(material);
+		var mesh = new THREE.Mesh( geometry, seagullMaterial);
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;
+		mesh.name = "vase";
+		var s = 0.8;
+		mesh.rotation.y = -10;
+		mesh.scale.set( 0.5, s, 0.5 );
+		mesh.position.set(12, 11, -15);
+		scene.add( mesh );
+
+	} );
+	loader.load( "meshes/tohm_cup2.js", function( geometry,material ) {
+		var whiteMaterial = new THREE.MeshPhongMaterial( { color: 0x99ccff, 
+			 shading: THREE.FlatShading
+		} );
+	
+		material[0] = whiteMaterial;
+
+		var seagullMaterial = new THREE.MultiMaterial(material);
+		var mesh = new THREE.Mesh( geometry, seagullMaterial);
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;
+		mesh.name = "vase";
+		var s = 0.6;
+		mesh.rotation.y = -10;
+		mesh.scale.set( 0.5, s, 0.5 );
+		mesh.position.set(12, 11, -15);
+		scene.add( mesh );
+
+	} );	
+	loader.load( "meshes/tohm_frame.js", function( geometry,material ) {
+		var woodMaterial = new THREE.MeshPhongMaterial( { color: 0xCC6633, 
+			 shading: THREE.FlatShading
+		} );
+		
+		var photoMaterial = new THREE.MeshBasicMaterial();	
+		var whiteMaterial = new THREE.MeshPhongMaterial( { color: 0xffffdd, 
+			 shading: THREE.FlatShading
+		} );			
+		material[0] = woodMaterial;
+		material[1] = photoMaterial;
+		material[2] = whiteMaterial;		
+		var seagullMaterial = new THREE.MultiMaterial(material);
+		var mesh = new THREE.Mesh( geometry, seagullMaterial);
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;
+		mesh.name = "frame";
+		var s = 0.6;
+		mesh.rotation.y = 20;
+		mesh.rotation.z = -8*Math.PI/180;
+		mesh.rotation.x = 8*Math.PI/180;
+		mesh.scale.set( s, s, s );
+		mesh.position.set(19.5, 11.2, -13.5);
+		scene.add( mesh );
+
+	} );
+	loader.load( "meshes/tohm_cake.js", function( geometry,material ) {
+		var redMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFF66, 
+			 shading: THREE.FlatShading
+		} );
+		var goldMaterial = new THREE.MeshPhongMaterial( { color: 0xFFCCCC, 
+			 shading: THREE.FlatShading
+		} );
+		var greenMaterial = new THREE.MeshPhongMaterial( { color: 0xCC0033, 
+			 shading: THREE.FlatShading
+		} );	
+		var yellowMaterial = new THREE.MeshPhongMaterial( { color: 0xFFFF66, 
+			 shading: THREE.FlatShading
+		} );		
+		material[2] = redMaterial;
+		material[1] = goldMaterial;
+		material[0] = greenMaterial;
+		material[3]	= yellowMaterial;
+		var seagullMaterial = new THREE.MultiMaterial(material);
+		var mesh = new THREE.Mesh( geometry, seagullMaterial);
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;
+		mesh.name = "cake";
+		var s = 1.3;
+		mesh.rotation.y = -10;
+		mesh.scale.set( s, s, s );
+		mesh.position.set(15.9, 10.5, -15.5);
+		scene.add( mesh );
+
+	} );
+	loader.load( "meshes/tohm_flower.js", function( geometry,material ) {
+		var redMaterial = new THREE.MeshPhongMaterial( { color: 0xFF0033, 
+			 shading: THREE.FlatShading
+		} );
+		var goldMaterial = new THREE.MeshPhongMaterial( { color: 0xffff00, 
+			 shading: THREE.FlatShading
+		} );
+		var greenMaterial = new THREE.MeshPhongMaterial( { color: 0x009933, 
+			 shading: THREE.FlatShading
+		} );			
+		material[2] = redMaterial;
+		material[1] = goldMaterial;
+		material[0] = greenMaterial;		
+		var seagullMaterial = new THREE.MultiMaterial(material);
+		var mesh = new THREE.Mesh( geometry, seagullMaterial);
+		mesh.castShadow = true;
+		mesh.receiveShadow = true;
+		mesh.name = "flower";
+		var s = 0.3;
+		mesh.rotation.y = -10;
+		mesh.scale.set( s, s, s );
+		mesh.position.set(13.5, 14.5, -15.5);
+		scene.add( mesh );
+
+	} );
+		var circularMotionIncrement = 1;
+		var circularMotionIncrement2 = 1;
+		var increRotationY = 0.5;
+		var increRotationY2 = 0.5;
+		function render() {
+
+			if (ani.seagull) {
+				var x = ani.seagull.position.x;
+				var y = ani.seagull.position.y;
+				var z = ani.seagull.position.z;
+				var r = 90;
+				var degree = Math.PI*2*circularMotionIncrement/360;
+				circularMotionIncrement = (circularMotionIncrement+0.4)%360;
+				x = -1*r*Math.sin(degree);
+				z = -1*r*Math.cos(degree);
+				y = 50*Math.sin(degree);
+				increRotationY = (increRotationY+0.007)%20;
+				ani.seagull.rotation.y = increRotationY;
+				ani.seagull.position.set(x, y+100, z);
+			}
+			if (ani.seagull2) {
+				var x = ani.seagull2.position.x;
+				var y = ani.seagull2.position.y;
+				var z = ani.seagull2.position.z;
+				var r2 = 130;
+				var degree2 = Math.PI*2*circularMotionIncrement2/360;
+				circularMotionIncrement2 = (circularMotionIncrement2-0.8)%360;
+				x = -1*r2*Math.sin(degree2);
+				z = -1*r2*Math.cos(degree2);
+				y = -50*Math.sin(degree2);
+				increRotationY2 = (increRotationY2-0.007)%20;
+				ani.seagull2.rotation.y = increRotationY2;
+				ani.seagull2.position.set(x, y+80, z);
+			}
+
+			if (ani.fish1) {
+				ani.fish1.position.x -= 0.4;
+				if (ani.fish1.position.x < -100) {
+					ani.fish1.position.x = 88;
+				}
+			}
+			if (ani.fish2) {
+				ani.fish2.position.x -= 0.4;
+				if (ani.fish2.position.x < -100) {
+					ani.fish2.position.x = 88;
+				}				
+			}
+			if (ani.blueWhale) {
+					ani.blueWhale.position.x += 0.5;
+					if (ani.blueWhale.position.x > 90) ani.blueWhale.position.x = -80;			
+			}			
+			littleFish.forEach(function  (e) {
+					e.position.x += 1.1;
+					if (e.position.x > 100) {
+						e.position.x = -88;
+					}
+			})
+
+			var delta = clock.getDelta();
+			orbitControls.update(delta);
+			if (ani.mir)
+			ani.mir.update(delta);
+			ani.group.forEach(function  (e) {
+				if (e)
+					e.update(delta);
+			})
+			requestAnimationFrame(render);
+			renderer.render(scene,camera);
+
+		}
+
+		render();
+
+	});
+
+
+	</script>
+</head>
+<body id = "container">
+
+</body>
+</html>
