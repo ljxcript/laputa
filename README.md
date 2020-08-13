@@ -1,4 +1,4 @@
-# lapuda
+# laputa
 __Built by ThreeJS, a framework of webGL and some basic web coding technics.__
 
 __The meshes were all built by Blender(a light, free 3d modeling software).__
