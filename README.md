@@ -1,6 +1,6 @@
 # laputa
 
-[entry](https://ljxcript.github.io/laputa/)
+__[entry](https://ljxcript.github.io/laputa/)__
 
 __Built by ThreeJS, a framework of webGL and some basic web coding technics.__
 
